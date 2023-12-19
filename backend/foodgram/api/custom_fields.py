@@ -19,11 +19,11 @@ class CustomImageField(serializers.ImageField):
             raise serializers.ValidationError("Invalid base64 data.")
         file_extension = 'png'
         name = f"{''.join(random.choices(charachters, k=6))}.{file_extension}"
-        path = os.path.join(settings.MEDIA_ROOT, 'recipes', 'images',  name)
+        path = os.path.join(settings.MEDIA_ROOT, 'recipes', 'images', name)
         try:
             with open(path, 'wb') as file:
                 file.write(decoded_data)
-            return os.path.join('recipes', 'images',  name)
+            return os.path.join('recipes', 'images', name)
         except Exception as e:
             print(e)
             raise serializers.ValidationError("Failed to save the image file.")

@@ -20,8 +20,8 @@ def object_exist_in_essence(context,
                             second_field):
     if context and context.user and not context.user.is_anonymous:
         return model.objects.filter(
-                **{f"{first_field}": serialize_obj,
-                   f"{second_field}": context.user}
+            **{f"{first_field}": serialize_obj,
+               f"{second_field}": context.user}
             ).exists()
     return False
 

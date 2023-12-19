@@ -76,8 +76,8 @@ class CustomUserViewSet(UserViewSet):
         if not self.request.user.is_anonymous:
             return Response(serializer.data, status=status.HTTP_200_OK)
         raise AuthenticationFailed(
-                'Авторизуйтесь для совершения действия!'
-            )
+            'Авторизуйтесь для совершения действия!'
+        )
 
     @action(detail=True,
             url_path=r'^\d+/subscribe$',
