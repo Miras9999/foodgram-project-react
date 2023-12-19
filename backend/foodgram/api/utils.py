@@ -22,7 +22,7 @@ def object_exist_in_essence(context,
         return model.objects.filter(
             **{f"{first_field}": serialize_obj,
                f"{second_field}": context.user}
-            ).exists()
+        ).exists()
     return False
 
 
