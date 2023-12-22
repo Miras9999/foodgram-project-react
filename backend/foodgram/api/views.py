@@ -15,6 +15,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from django.db.models import Sum
 
 from .serializers import (CustomUserSerializer,
                           RecipeSerializer,
@@ -29,7 +30,6 @@ from .custom_filters import RecipeFilter, IngredientFilter, UsersFilter
 from core.models import (Recipe,
                          Tag,
                          Ingredient,
-                         Follow,
                          Favorite,
                          Cart,
                          RecipeIngredientAmount)
@@ -39,6 +39,10 @@ from .permissions import (RecipeAuthorOrReadOnly,
 from .utils import recipe_actions
 
 User = get_user_model()
+
+x_coordinate = 100
+y_coordinate = 700
+y_offset = 12
 
 
 class CustomUserViewSet(UserViewSet):
@@ -51,8 +55,7 @@ class CustomUserViewSet(UserViewSet):
     def get_permissions(self):
         if self.action == 'list' or self.action == 'retrieve':
             return (ReadOnly(),)
-        else:
-            return (IsOwnerOrAdminOrReadOnly(),)
+        return (IsOwnerOrAdminOrReadOnly(),)
 
     def get_serializer_class(self):
         if self.action == 'list' or self.action == 'retrieve':
@@ -89,25 +92,17 @@ class CustomUserViewSet(UserViewSet):
             raise AuthenticationFailed(
                 'Авторизуйтесь для совершения действия!'
             )
-        if user == following:
-            raise serializers.ValidationError(
-                'Нельзя подписаться на себя самого!'
-            )
         if request.method == 'POST':
-            follow_obj = Follow.objects.filter(user=user,
-                                               following=following).exists()
-            if follow_obj:
-                raise serializers.ValidationError(
-                    'Подписка уже существует!'
-                )
-            follow_obj = Follow.objects.create(user=user, following=following)
             serializer = FollowSerializer(
-                follow_obj, context={'request': self.request}
+                data=request.data,
+                context={'request': self.request,
+                         'following': following}
             )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            follow = Follow.objects.filter(user=user,
-                                           following=following).first()
+        if request.method == 'DELETE':
+            follow = user.user.filter(following=following).first()
             if not follow:
                 raise serializers.ValidationError(
                     'Подписки не существует!'
@@ -123,9 +118,7 @@ class CustomUserViewSet(UserViewSet):
             raise serializers.ValidationError(
                 'Авторизуйтесь для выполнения действия!'
             )
-        follow = Follow.objects.filter(user=self.request.user).order_by(
-            '-created'
-        )
+        follow = self.request.user.user.all()
         paginator = PageNumberPagination()
         paginator.page_size_query_param = 'limit'
         result = paginator.paginate_queryset(follow, request)
@@ -138,7 +131,7 @@ class CustomUserViewSet(UserViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.prefetch_related(
         "tags", "ingredients"
-    ).all().order_by('-created')
+    ).all()
     serializer_class = RecipeSerializer
     filter_backends = [filter.DjangoFilterBackend]
     filterset_class = RecipeFilter
@@ -170,19 +163,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             methods=['get'])
     def download_shopping_cart(self, request):
         current_user = request.user
-        cart = Cart.objects.filter(user=current_user).values('recipe_id')
-        recipes = Recipe.objects.filter(id__in=cart).values('id')
-        ingredients = {}
-        recipeingredientamount = RecipeIngredientAmount.objects.filter(
-            recipe_id__in=recipes
+        cart = current_user.cart_user.values('recipe_id')
+        ingredients = RecipeIngredientAmount.objects.prefetch_related(
+            'ingredients', 'amount'
+        ).filter(recipe_id__in=cart).values(
+            'ingredients__name', 'ingredients__measurement_unit'
+        ).annotate(ingr_sum=Sum('amount__amount')).order_by(
+            'ingredients__name'
         )
-
-        for recipe_ingr in recipeingredientamount:
-            key = f"{recipe_ingr.ingredients.name}" \
-                  f"({recipe_ingr.ingredients.measurement_unit})"
-            ingredients[
-                key
-            ] = ingredients.get(key, 0) + recipe_ingr.amount.amount
 
         pdf_byte_stream = BytesIO()
         pdf_buffer = BytesIO()
@@ -192,11 +180,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                  'fonts',
                                  'DejaVuSerif.ttf')
         pdfmetrics.registerFont(TTFont('DejaVuSerif', font_path))
-        x, y = 100, 700
-        for ingredient, ingredient_amount in ingredients.items():
+        x, y = x_coordinate, y_coordinate
+        for ingredient in ingredients:
             p.setFont("DejaVuSerif", 12)
-            p.drawString(x, y, f"{ingredient} - {ingredient_amount}")
-            y -= 12
+            p.drawString(x,
+                         y,
+                         f"{ingredient.get('ingredients__name')}"
+                         f"({ingredient.get('ingredients__measurement_unit')})"
+                         f" - {ingredient.get('ingr_sum')}")
+            y -= y_offset
         p.showPage()
         p.save()
         pdf_buffer.seek(0)

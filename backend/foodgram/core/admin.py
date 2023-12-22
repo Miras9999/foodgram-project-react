@@ -7,11 +7,13 @@ from .models import (Tag, Ingredient, Recipe, Favorite, RecipeTag,
 class TagInline(admin.StackedInline):
     model = RecipeTag
     extra = 0
+    min_num = 1
 
 
 class IngredientInline(admin.StackedInline):
     model = RecipeIngredientAmount
     extra = 0
+    min_num = 1
 
 
 class RecipeAdmin(admin.ModelAdmin):
@@ -25,7 +27,7 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = (TagInline, IngredientInline)
 
     def favorite_count(self, obj):
-        return Favorite.objects.filter(recipe=obj).count()
+        return obj.favorite_recipe.count()
 
 
 class IngredientAdmin(admin.ModelAdmin):

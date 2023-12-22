@@ -1,29 +1,15 @@
 import base64
-import os
-import random
 
 from rest_framework import serializers
-from django.conf import settings
+from django.core.files.base import ContentFile
 
 
-charachters = 'ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz1234567890'
-
-
-class CustomImageField(serializers.ImageField):
+class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
-        try:
-            parse = data.split(',')
-            data = parse[1]
-            decoded_data = base64.b64decode(data)
-        except Exception:
-            raise serializers.ValidationError("Invalid base64 data.")
-        file_extension = 'png'
-        name = f"{''.join(random.choices(charachters, k=6))}.{file_extension}"
-        path = os.path.join(settings.MEDIA_ROOT, 'recipes', 'images', name)
-        try:
-            with open(path, 'wb') as file:
-                file.write(decoded_data)
-            return os.path.join('recipes', 'images', name)
-        except Exception as e:
-            print(e)
-            raise serializers.ValidationError("Failed to save the image file.")
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super(Base64ImageField, self).to_internal_value(data)

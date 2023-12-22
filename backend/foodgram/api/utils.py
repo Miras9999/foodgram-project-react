@@ -1,7 +1,8 @@
 from rest_framework.response import Response
 from rest_framework import status, serializers
 
-from core.models import Amount, Ingredient, RecipeIngredientAmount, Recipe
+from core.models import (Amount, Ingredient, RecipeIngredientAmount, Recipe,
+                         RecipeTag)
 
 
 def filter_queryset(user, model, queryset):
@@ -27,35 +28,31 @@ def object_exist_in_essence(context,
 
 
 def ingredient_create(ingredients, recipe):
+    recipe_ingr_amount = []
+    ingredients_id = []
     for ingredient in ingredients:
-        if int(ingredient['amount']) < 1:
-            raise serializers.ValidationError(
-                'Время приготовления должно быть больше 1 минуты'
-            )
         amount_obj, created = Amount.objects.get_or_create(
             amount=ingredient['amount']
         )
         ingredient_obj = Ingredient.objects.filter(id=ingredient['id'])
         if not ingredient_obj.exists():
-            raise serializers.ValidationError('Ингредиента не существует')
-        recipe_ingredient_amount_exist = RecipeIngredientAmount.objects.filter(
-            recipe=recipe, ingredients=ingredient_obj.first()
-        ).exists()
-        if recipe_ingredient_amount_exist:
-            raise serializers.ValidationError('Ингредиент уже добавлен')
-        RecipeIngredientAmount.objects.create(
+            raise serializers.ValidationError('Ингредиента не существует!')
+        if ingredient['id'] in ingredients_id:
+            raise serializers.ValidationError('Ингредиент дублируется!')
+        ingredients_id.append(ingredient['id'])
+        recipe_ingr_amount_composition = RecipeIngredientAmount(
             recipe=recipe,
             amount=amount_obj,
             ingredients=ingredient_obj.first()
         )
+        recipe_ingr_amount.append(recipe_ingr_amount_composition)
+    RecipeIngredientAmount.objects.bulk_create(recipe_ingr_amount)
 
 
 def recipe_actions(request, model, serializer, pk):
     user = request.user
     recipe = Recipe.objects.filter(id=pk).first()
     model_obj = model.objects.filter(user=user, recipe=recipe).first()
-    # if user.is_anonymous:
-    #     return Response(status=status.HTTP_401_UNAUTHORIZED)
     if request.method == 'POST':
         if recipe is None:
             raise serializers.ValidationError('Рецепта не сущетсвует!')
@@ -66,8 +63,6 @@ def recipe_actions(request, model, serializer, pk):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     if request.method == 'DELETE':
-        # if user.is_anonymous:
-        #     return Response(status=status.HTTP_401_UNAUTHORIZED)
         if recipe is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if model_obj is None:
@@ -80,3 +75,15 @@ def filter_limit(queryset, value):
     if value:
         return queryset[:int(value)]
     return queryset
+
+
+def tag_create(tags, recipe):
+    recipe_tags = []
+    tags_exist = []
+    for tag in tags:
+        if tag in tags_exist:
+            raise serializers.ValidationError('Данный тег уже добавлен')
+        tags_exist.append(tag)
+        recipe_tag_composition = RecipeTag(recipe=recipe, tag=tag)
+        recipe_tags.append(recipe_tag_composition)
+    RecipeTag.objects.bulk_create(recipe_tags)

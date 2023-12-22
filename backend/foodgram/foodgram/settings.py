@@ -9,7 +9,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'my-sercret-key')
 
 DEBUG = bool(os.getenv('DEBUG', True))
 
-ALLOWED_HOSTS = tuple(os.getenv('ALLOWED_HOSTS', '*').split(','))
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 USE_X_FORWARDED_HOST = True
 
 
@@ -82,10 +82,6 @@ DATABASES = {
         'HOST': os.getenv('DB_HOST', ''),
         'PORT': os.getenv('DB_PORT', 5432)
     }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / "db.sqlite3",
-    # }
 }
 
 
