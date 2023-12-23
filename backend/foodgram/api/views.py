@@ -26,7 +26,7 @@ from .serializers import (CustomUserSerializer,
                           CustomPostUserSerializer,
                           ChangePasswordSerializer,
                           IngredientSerializer)
-from .custom_filters import RecipeFilter, IngredientFilter, UsersFilter
+from .custom_filters import RecipeFilter, IngredientFilter
 from core.models import (Recipe,
                          Tag,
                          Ingredient,
@@ -38,11 +38,13 @@ from .permissions import (RecipeAuthorOrReadOnly,
                           IsOwnerOrAdminOrReadOnly)
 from .utils import recipe_actions
 
+
 User = get_user_model()
 
-x_coordinate = 100
-y_coordinate = 700
-y_offset = 12
+X_COORDINATE = 100
+Y_COORDINATE = 700
+Y_OFFSET = 12
+FONT_SIZE = 12
 
 
 class CustomUserViewSet(UserViewSet):
@@ -50,7 +52,6 @@ class CustomUserViewSet(UserViewSet):
     serializer_class = CustomUserSerializer
     permission_classes = (IsOwnerOrAdminOrReadOnly,)
     filter_backends = [filter.DjangoFilterBackend]
-    filterset_class = UsersFilter
 
     def get_permissions(self):
         if self.action == 'list' or self.action == 'retrieve':
@@ -130,7 +131,7 @@ class CustomUserViewSet(UserViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.prefetch_related(
-        "tags", "ingredients"
+        'tags', 'ingredients'
     ).all()
     serializer_class = RecipeSerializer
     filter_backends = [filter.DjangoFilterBackend]
@@ -172,7 +173,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredients__name'
         )
 
-        pdf_byte_stream = BytesIO()
         pdf_buffer = BytesIO()
         p = canvas.Canvas(pdf_buffer)
         font_path = os.path.join(settings.BASE_DIR,
@@ -180,20 +180,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                  'fonts',
                                  'DejaVuSerif.ttf')
         pdfmetrics.registerFont(TTFont('DejaVuSerif', font_path))
-        x, y = x_coordinate, y_coordinate
+        x, y = X_COORDINATE, Y_COORDINATE
         for ingredient in ingredients:
-            p.setFont("DejaVuSerif", 12)
+            p.setFont('DejaVuSerif', FONT_SIZE)
             p.drawString(x,
                          y,
                          f"{ingredient.get('ingredients__name')}"
                          f"({ingredient.get('ingredients__measurement_unit')})"
                          f" - {ingredient.get('ingr_sum')}")
-            y -= y_offset
+            y -= Y_OFFSET
         p.showPage()
         p.save()
         pdf_buffer.seek(0)
-        pdf_byte_stream = pdf_buffer.read()
-        response = HttpResponse(pdf_byte_stream,
+        response = HttpResponse(pdf_buffer.read(),
                                 content_type='application/pdf')
         return response
 

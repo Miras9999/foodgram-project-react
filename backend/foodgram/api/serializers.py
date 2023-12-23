@@ -10,9 +10,9 @@ from .utils import object_exist_in_essence, ingredient_create, tag_create
 
 User = get_user_model()
 
-max_amount = 32000
-min_amount = 1
-recipe_slice = 3
+MAX_AMOUNT = 32000
+MIN_AMOUNT = 1
+RECIPE_SLICE = 3
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -22,7 +22,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate_current_password(self, value):
         user = self.context['request'].user
         if not user.check_password(value):
-            raise serializers.ValidationError("Некорректный пароль")
+            raise serializers.ValidationError('Некорректный пароль')
         return value
 
     def save(self):
@@ -106,9 +106,9 @@ class IngredientListSerializer(serializers.ModelSerializer):
         return None
 
 
-class IngredientRetrieveSerializer(serializers.ModelSerializer):
-    amount = serializers.IntegerField(max_value=max_amount,
-                                      min_value=min_amount)
+class IngredientPostSerializer(serializers.ModelSerializer):
+    amount = serializers.IntegerField(max_value=MAX_AMOUNT,
+                                      min_value=MIN_AMOUNT)
     id = serializers.IntegerField()
 
     class Meta:
@@ -175,7 +175,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateUpdateSeraializer(serializers.ModelSerializer):
-    ingredients = IngredientRetrieveSerializer(many=True)
+    ingredients = IngredientPostSerializer(many=True)
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                               many=True,
                                               required=True)
@@ -183,8 +183,8 @@ class RecipeCreateUpdateSeraializer(serializers.ModelSerializer):
     author = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
-    cooking_time = serializers.IntegerField(max_value=max_amount,
-                                            min_value=min_amount,
+    cooking_time = serializers.IntegerField(max_value=MAX_AMOUNT,
+                                            min_value=MIN_AMOUNT,
                                             required=True)
 
     class Meta:
@@ -209,10 +209,10 @@ class RecipeCreateUpdateSeraializer(serializers.ModelSerializer):
         ingredients = data.get('ingredients')
 
         if not tags:
-            raise serializers.ValidationError("Это поле не может быть пустым")
+            raise serializers.ValidationError('Это поле не может быть пустым')
 
         if not ingredients:
-            raise serializers.ValidationError("Это поле не может быть пустым")
+            raise serializers.ValidationError('Это поле не может быть пустым')
 
         return data
 
@@ -289,15 +289,18 @@ class FollowSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context.get('request').user
         following = self.context.get('following')
-        if following == user:
-            raise serializers.ValidationError(
-                'Нельзя подписаться на себя самого!'
+        if user and following:
+            if following == user:
+                raise serializers.ValidationError(
+                    'Нельзя подписаться на себя самого!'
+                )
+            follow_obj, created = Follow.objects.get_or_create(
+                user=user,
+                following=following
             )
-        follow_obj, created = Follow.objects.get_or_create(user=user,
-                                                           following=following)
-        if not created:
-            raise serializers.ValidationError('Подписка уже существует!')
-        return follow_obj
+            if not created:
+                raise serializers.ValidationError('Подписка уже существует!')
+            return follow_obj
 
     def get_recipes(self, obj):
         request = self.context.get('request')
@@ -305,11 +308,11 @@ class FollowSerializer(serializers.ModelSerializer):
         if request:
             recipes_limit = request.query_params.get(
                 'recipes_limit'
-            )
+            ) 
         recipes = obj.following.recipe_set.all().order_by('-created')
-        if not recipes.count() > recipe_slice:
+        if not recipes.count() > RECIPE_SLICE:
             return RecipeShortSerializer(recipes, many=True).data
         if recipes_limit:
             return RecipeShortSerializer(recipes[:int(recipes_limit)],
                                          many=True).data
-        return RecipeShortSerializer(recipes[:recipe_slice], many=True).data
+        return RecipeShortSerializer(recipes[:RECIPE_SLICE], many=True).data

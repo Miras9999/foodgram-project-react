@@ -2,7 +2,7 @@ from django_filters import rest_framework as filter
 from django.contrib.auth import get_user_model
 
 from core.models import Recipe, Favorite, Cart, Ingredient
-from .utils import filter_queryset, filter_limit
+from .utils import filter_queryset
 
 User = get_user_model()
 
@@ -13,7 +13,6 @@ class RecipeFilter(filter.FilterSet):
     is_in_shopping_cart = filter.CharFilter(method='cart_filter')
     ingredients = filter.CharFilter(field_name='ingredients__name',
                                     lookup_expr='istartswith')
-    limit = filter.NumberFilter(method='limit_filter')
 
     def tags_filter(self, queryset, name, value):
         tag_list = self.request.GET.getlist('tags')
@@ -24,9 +23,6 @@ class RecipeFilter(filter.FilterSet):
 
     def cart_filter(self, queryset, name, value):
         return filter_queryset(self.request.user, Cart, queryset)
-
-    def limit_filter(self, queryset, name, value):
-        return filter_limit(queryset, value)
 
     class Meta:
         model = Recipe
@@ -40,10 +36,3 @@ class IngredientFilter(filter.FilterSet):
     class Meta:
         model = Ingredient
         fields = ['name']
-
-
-class UsersFilter(filter.FilterSet):
-    limit = filter.NumberFilter(method='limit_filter')
-
-    def limit_filter(self, queryset, name, value):
-        return filter_limit(queryset, value)

@@ -14,15 +14,15 @@ def filter_queryset(user, model, queryset):
     return queryset.none()
 
 
-def object_exist_in_essence(context,
+def object_exist_in_essence(request,
                             model,
                             serialize_obj,
                             first_field,
                             second_field):
-    if context and context.user and not context.user.is_anonymous:
+    if request and not request.user.is_anonymous:
         return model.objects.filter(
             **{f"{first_field}": serialize_obj,
-               f"{second_field}": context.user}
+               f"{second_field}": request.user}
         ).exists()
     return False
 
@@ -69,12 +69,6 @@ def recipe_actions(request, model, serializer, pk):
             raise serializers.ValidationError('Объекта не существует')
         model_obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-def filter_limit(queryset, value):
-    if value:
-        return queryset[:int(value)]
-    return queryset
 
 
 def tag_create(tags, recipe):
