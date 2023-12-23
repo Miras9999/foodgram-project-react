@@ -308,7 +308,7 @@ class FollowSerializer(serializers.ModelSerializer):
         if request:
             recipes_limit = request.query_params.get(
                 'recipes_limit'
-            ) 
+            )
         recipes = obj.following.recipe_set.all().order_by('-created')
         if not recipes.count() > RECIPE_SLICE:
             return RecipeShortSerializer(recipes, many=True).data
