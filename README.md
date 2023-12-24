@@ -11,6 +11,12 @@
 - Docker
 - React
 
+Примеры запросов:
+localhost/api/recipes/ - список рецептов (GET), создание рецепта (POST)
+localhost/api/recipes/<int:id>/ - информация о конкретном рецепте (GET), редактирование рецепта (POST)
+localhost/api/recipes/<int:id>/favorite/ - добавление рецепта в избранное (POST), удаление рецепта из избранного (DELETE)
+localhost/api/recipes/<int:id>/shopping_cart/ - добавление рецепта в корзину (POST), удаление рецепта из корзины (DELETE) 
+
 Об авторе:
     Python разработчик работающий со стэком: django, drf, docker, celery.
 
