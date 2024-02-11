@@ -6,13 +6,17 @@
 -
 - В директории infra создаём .env файл(можно пустой)
 - Из директории infra выполните команду:  
-```docker compose up```
-- Примените миграции выполнив в контейнере backend команду:   
-```python manage.py migrate```
-- Соберите статические файлы выполнив в контейнере backend команду:
-```python manage.py collectstatic```
+
+      docker compose up
+- Примените миграции выполнив в контейнере backend команду:
+
+      python manage.py migrate
+- Соберите статические файлы выполнив в контейнере backend команду:   
+
+      python manage.py collectstatic
 - Проект будет доступен по адресу:   
-```http://localhost```
+
+      http://localhost
 
 Стэк технологий:
 -
