@@ -5,10 +5,14 @@
 Запуск проекта:
 -
 - В директории infra создаём .env файл(можно пустой)
-- Из директории infra выполните команду: docker compose up
-- Примените миграции выполнив в контейнере backend команду: python manage.py migrate
-- Соберите статические файлы выполнив в контейнере backend команду: python manage.py collectstatic
-- Проект будет доступен по адресу:  http://localhost
+- Из директории infra выполните команду:  
+```docker compose up```
+- Примените миграции выполнив в контейнере backend команду:   
+```python manage.py migrate```
+- Соберите статические файлы выполнив в контейнере backend команду:
+```python manage.py collectstatic```
+- Проект будет доступен по адресу:   
+```http://localhost```
 
 Стэк технологий:
 -
@@ -28,5 +32,4 @@
 
 Об авторе:
 -
-
-    Python разработчик, с оновным стэком разработки: django, drf, docker, celery, nginx, vue js.
+Python разработчик, с оновным стэком разработки: django, drf, docker, celery, nginx, vue js.
