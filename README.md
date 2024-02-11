@@ -1,26 +1,25 @@
 Проект «Фудграм» — сайт, на котором пользователи могут публиковать рецепты, добавлять чужие рецепты в избранное и подписываться на публикации других авторов.Пользователям сайта также доступен сервис «Список покупок». Он позволит создавать список продуктов, которые нужно купить для приготовления выбранных блюд.
 
 Запуск проекта:
-Из директории infra выполните команду: docker-compose up
-Проект будет доступен по адресу:  http://localhost
+- Из директории infra выполните команду: docker compose up
+- Примените миграции выполнив в контейнере backend команду: python manage.py migrate
+- Соберите статические файлы выполнив в контейнере backend команду: python manage.py collectstatic
+- Проект будет доступен по адресу:  http://localhost
 
 Стэк технологий:
 - Python
 - Django
-- DRF
+- Django Rest Framework(DRF)
 - Docker
+- Nginx
 - React
 
 Примеры запросов:
-localhost/api/recipes/ - список рецептов (GET), создание рецепта (POST)
-localhost/api/recipes/<int:id>/ - информация о конкретном рецепте (GET), редактирование рецепта (POST)
-localhost/api/recipes/<int:id>/favorite/ - добавление рецепта в избранное (POST), удаление рецепта из избранного (DELETE)
-localhost/api/recipes/<int:id>/shopping_cart/ - добавление рецепта в корзину (POST), удаление рецепта из корзины (DELETE) 
+- localhost/api/recipes/ - список рецептов (GET), создание рецепта (POST)
+- localhost/api/recipes/<int:id>/ - информация о конкретном рецепте (GET), редактирование рецепта (POST)
+- localhost/api/recipes/<int:id>/favorite/ - добавление рецепта в избранное (POST), удаление рецепта из избранного (DELETE)
+- localhost/api/recipes/<int:id>/shopping_cart/ - добавление рецепта в корзину (POST), удаление рецепта из корзины (DELETE) 
 
 Об авторе:
-    Python разработчик работающий со стэком: django, drf, docker, celery.
 
-ip: 158.160.20.87
-admin-user:
-  login - foodgram_admin@mail.ru
-  password - foodgram111
+    Python разработчик, с оновным стэком разработки: django, drf, docker, celery, nginx, vue js.
