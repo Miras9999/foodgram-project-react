@@ -34,6 +34,10 @@
 - localhost/api/recipes/<int:id>/favorite/ - добавление рецепта в избранное (POST), удаление рецепта из избранного (DELETE)
 - localhost/api/recipes/<int:id>/shopping_cart/ - добавление рецепта в корзину (POST), удаление рецепта из корзины (DELETE) 
 
+Пример интерфейса:
+-
+![](./screenshots/index.png)
+
 Об авторе:
 -
 Python разработчик, с оновным стэком разработки: django, drf, docker, celery, nginx, vue js.
